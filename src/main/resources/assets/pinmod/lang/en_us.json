@@ -1,0 +1,12 @@
+{
+  "key.categories.pinmod" : "Pin Mod",
+  "key.pinmod.add_pin": "Add Pin",
+  "key.pinmod.open_config": "Open Config",
+  "key.pinmod.manage_pin" : "Manage pin",
+  "key.pinmod.toggle_visibility" : "Toggle pin visibility",
+  "key.pinmod.category": "Key category",
+  "key.pinmod.setting": "Key setting",
+  "screen.pinmod.setting": "Example screen",
+  "screen.pinmod.sub": "Sub screen",
+  "button.pinmod.setting": "Button!"
+}
