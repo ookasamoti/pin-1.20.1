@@ -1,12 +1,18 @@
 {
-  "key.categories.pinmod" : "Pin Mod",
+  "key.categories.pinmod": "Pin Mod",
   "key.pinmod.add_pin": "Add Pin",
   "key.pinmod.open_config": "Open Config",
-  "key.pinmod.manage_pin" : "Manage pin",
-  "key.pinmod.toggle_visibility" : "Toggle pin visibility",
-  "key.pinmod.category": "Key category",
-  "key.pinmod.setting": "Key setting",
-  "screen.pinmod.setting": "Example screen",
-  "screen.pinmod.sub": "Sub screen",
-  "button.pinmod.setting": "Button!"
+  "key.pinmod.manage_pin": "Manage Pin",
+  "key.pinmod.toggle_visibility": "Toggle Pin Visibility",
+  "key.pinmod.category": "Key Category",
+  "key.pinmod.setting": "pinmod Setting",
+  "screen.pinmod.main_config": "pinmod Setting",
+  "button.pinmod.show_in_game": "Show In-Game:",
+  "button.pinmod.render_settings": "Render Settings",
+  "button.pinmod.control_settings": "Control Settings",
+  "button.pinmod.advanced_settings": "Advanced Settings",
+  "button.pinmod.pin_management": "Pin Management",
+  "button.pinmod.multiplayer": "Multiplayer",
+  "button.pinmod.integration_journeymap": "Integration: JourneyMap",
+  "button.pinmod.back_to_game": "Back to Game"
 }

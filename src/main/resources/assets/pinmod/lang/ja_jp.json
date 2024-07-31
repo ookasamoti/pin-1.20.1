@@ -1,0 +1,18 @@
+{
+  "key.categories.pinmod": "ピンmod",
+  "key.pinmod.add_pin": "ピンを追加",
+  "key.pinmod.open_config": "設定を開く",
+  "key.pinmod.manage_pin": "ピン管理",
+  "key.pinmod.toggle_visibility": "ピンの表示/非表示を切り替え",
+  "key.pinmod.category": "キーカテゴリー",
+  "key.pinmod.setting": "キー設定",
+  "screen.pinmod.main_config": "ピンmod 設定画面",
+  "button.pinmod.show_in_game": "ゲーム内表示：",
+  "button.pinmod.render_settings": "描画設定",
+  "button.pinmod.control_settings": "操作設定",
+  "button.pinmod.advanced_settings": "詳細設定",
+  "button.pinmod.pin_management": "ピン管理",
+  "button.pinmod.multiplayer": "マルチプレイ",
+  "button.pinmod.integration_journeymap": "連携：JourneyMap",
+  "button.pinmod.back_to_game": "ゲームに戻る"
+}

@@ -2,6 +2,7 @@ package net.ookasamoti.pinmod.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -36,7 +37,7 @@ public class KeyInputHandler {
             PinManagerHandler.addPin();
         }
         if (openConfigKey.consumeClick()) {
-            net.minecraft.client.Minecraft.getInstance().setScreen(new PinConfigScreen(null));
+            Minecraft.getInstance().setScreen(new MainConfigScreen(Minecraft.getInstance().screen));
         }
     }
 }
