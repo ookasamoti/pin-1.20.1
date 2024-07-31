@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class PinRenderer {
-    private static final double MAX_RENDER_DISTANCE = 16.0; // 16ブロック
+    private static final double MAX_RENDER_DISTANCE = 16.0;
 
     @SubscribeEvent
     public static void onRenderWorldLast(RenderLevelStageEvent event) {
@@ -51,7 +51,6 @@ public class PinRenderer {
         double pinZ = pin.getZ();
         double distance = cameraPos.distanceTo(new Vec3(pinX, pinY, pinZ));
 
-        // ピンがレンダー距離を超えている場合、視点から一定距離に描画
         if (distance > MAX_RENDER_DISTANCE) {
             double ratio = MAX_RENDER_DISTANCE / distance;
             pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
@@ -75,7 +74,7 @@ public class PinRenderer {
         RenderSystem.disableDepthTest();
 
         PoseStack.Pose pose = matrixStack.last();
-        int color = 0x80FFFFFF; // 0x80 = 50% alpha, 0xFFFFFF = white
+        int color = 0x80FFFFFF;
         font.drawInBatch("◈", -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
         buffer.endBatch();
 

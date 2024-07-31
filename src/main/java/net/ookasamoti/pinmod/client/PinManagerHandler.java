@@ -1,7 +1,6 @@
 package net.ookasamoti.pinmod.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -23,19 +22,13 @@ public class PinManagerHandler {
                 BlockHitResult blockHitResult = (BlockHitResult) hitResult;
                 BlockPos blockPos = blockHitResult.getBlockPos();
                 Direction face = blockHitResult.getDirection();
-                BlockPos pinPos = blockPos.relative(face); // 面に対して適切な位置にピンを配置
+                BlockPos pinPos = blockPos.relative(face);
 
                 double x = pinPos.getX() + 0.5;
                 double y = pinPos.getY() + 0.5;
                 double z = pinPos.getZ() + 0.5;
 
-                // ピンを追加
                 PinManager.addPin(mc.player.getUUID(), new Pin(x, y, z));
-
-                String message = String.format("Pin created at X: %.2f, Y: %.2f, Z: %.2f", x, y, z);
-                mc.player.displayClientMessage(Component.literal(message), false);
-            } else {
-                mc.player.displayClientMessage(Component.literal("No block in sight."), false);
             }
         }
     }
