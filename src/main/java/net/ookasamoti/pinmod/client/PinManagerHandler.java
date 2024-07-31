@@ -25,7 +25,7 @@ public class PinManagerHandler {
                 BlockPos pinPos = blockPos.relative(face);
 
                 double x = pinPos.getX() + 0.5;
-                double y = pinPos.getY() + 0.5;
+                double y = pinPos.getY() + 1;
                 double z = pinPos.getZ() + 0.5;
 
                 PinManager.addPin(mc.player.getUUID(), new Pin(x, y, z));

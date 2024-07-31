@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class KeyInputHandler {
-    public static final KeyMapping addPinKey = createKeyMapping("key.pinmod.add_pin", GLFW.GLFW_KEY_P);
+    public static final KeyMapping addPinKey = createKeyMapping("key.pinmod.add_pin", GLFW.GLFW_KEY_L);
     public static final KeyMapping openConfigKey = createKeyMapping("key.pinmod.open_config", GLFW.GLFW_KEY_O);
 
     private static KeyMapping createKeyMapping(String description, int key) {

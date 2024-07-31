@@ -66,7 +66,7 @@ public class PinRenderer {
         matrixStack.translate(x, y, z);
         matrixStack.mulPose(dispatcher.cameraOrientation());
 
-        float scale = 0.05F;
+        float scale = 0.1F;
         matrixStack.scale(-scale, -scale, scale);
 
         RenderSystem.enableBlend();
@@ -75,7 +75,7 @@ public class PinRenderer {
 
         PoseStack.Pose pose = matrixStack.last();
         int color = 0x80FFFFFF;
-        font.drawInBatch("◈", -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+        font.drawInBatch("◈", (float) -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
         buffer.endBatch();
 
         RenderSystem.enableDepthTest();
