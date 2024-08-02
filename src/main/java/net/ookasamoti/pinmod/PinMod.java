@@ -10,6 +10,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.ookasamoti.pinmod.client.KeyInputHandler;
+import net.ookasamoti.pinmod.client.PinRenderer;
+import net.ookasamoti.pinmod.config.PinModConfig;
 import org.slf4j.Logger;
 
 @Mod(PinMod.MOD_ID)
@@ -21,21 +23,23 @@ public class PinMod {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
-        modEventBus.addListener(KeyInputHandler::registerKeyMappings);
+
+        PinModConfig.register();  // コンフィグの登録をここで行います
 
         MinecraftForge.EVENT_BUS.register(this);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-
+        // Common setup code
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        MinecraftForge.EVENT_BUS.register(new net.ookasamoti.pinmod.client.PinRenderer());
+        KeyInputHandler.register(event);
+        MinecraftForge.EVENT_BUS.register(new PinRenderer());
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-
+        LOGGER.info("HELLO from server starting");
     }
 }

@@ -6,11 +6,11 @@ import net.minecraftforge.fml.config.ModConfig;
 
 public class PinModConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
-    public static final ForgeConfigSpec.ConfigValue<Float> PIN_SCALE;
+    public static final ForgeConfigSpec.BooleanValue SHOW_IN_GAME;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        PIN_SCALE = builder.comment("Scale of the pin").define("pin.scale", 0.05F);
+        SHOW_IN_GAME = builder.comment("Show pins in game").define("showInGame", true);
         CLIENT_SPEC = builder.build();
     }
 

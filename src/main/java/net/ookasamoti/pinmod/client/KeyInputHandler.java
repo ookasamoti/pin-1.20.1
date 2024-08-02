@@ -1,11 +1,11 @@
 package net.ookasamoti.pinmod.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -14,12 +14,19 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class KeyInputHandler {
-    public static final KeyMapping addPinKey = createKeyMapping("key.pinmod.add_pin", GLFW.GLFW_KEY_L);
-    public static final KeyMapping openConfigKey = createKeyMapping("key.pinmod.open_config", GLFW.GLFW_KEY_O);
+    public static final KeyMapping addPinKey = new KeyMapping(
+            "key.pinmod.add_pin",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_P,
+            "key.categories.pinmod"
+    );
 
-    private static KeyMapping createKeyMapping(String description, int key) {
-        return new KeyMapping(description, KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, key, "key.categories.pinmod");
-    }
+    public static final KeyMapping openConfigKey = new KeyMapping(
+            "key.pinmod.open_config",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_O,
+            "key.categories.pinmod"
+    );
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
@@ -28,16 +35,25 @@ public class KeyInputHandler {
     }
 
     public static void register(final FMLClientSetupEvent event) {
+        Minecraft.getInstance().options.keyMappings = addKeyMapping(Minecraft.getInstance().options.keyMappings, addPinKey);
+        Minecraft.getInstance().options.keyMappings = addKeyMapping(Minecraft.getInstance().options.keyMappings, openConfigKey);
+    }
 
+    private static KeyMapping[] addKeyMapping(KeyMapping[] keyMappings, KeyMapping newKeyMapping) {
+        KeyMapping[] newKeyMappings = new KeyMapping[keyMappings.length + 1];
+        System.arraycopy(keyMappings, 0, newKeyMappings, 0, keyMappings.length);
+        newKeyMappings[keyMappings.length] = newKeyMapping;
+        return newKeyMappings;
     }
 
     @SubscribeEvent
-    public static void onKeyInput(net.minecraftforge.client.event.InputEvent.Key event) {
-        if (addPinKey.consumeClick()) {
-            PinManagerHandler.addPin();
+    public static void onKeyInput(InputEvent.Key event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (addPinKey.isDown()) {
+                PinManagerHandler.addPin();
         }
-        if (openConfigKey.consumeClick()) {
-            Minecraft.getInstance().setScreen(new MainConfigScreen(Minecraft.getInstance().screen));
+        if (openConfigKey.isDown()) {
+            mc.setScreen(new MainConfigScreen(mc.screen));
         }
     }
 }

@@ -5,7 +5,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.ookasamoti.pinmod.client.MainConfigHandler;
+import net.ookasamoti.pinmod.config.PinModConfig;
+import org.jetbrains.annotations.NotNull;
 
 public class MainConfigScreen extends Screen {
     private final Screen parent;
@@ -23,10 +24,14 @@ public class MainConfigScreen extends Screen {
         int buttonMargin = 8;
         int startY = this.height / 4 + 5;
 
-        addRenderableWidget(Button.builder(
-                MainConfigHandler.getShowInGameText(),
-                MainConfigHandler::toggleShowInGame
-        ).pos(this.width / 2 - buttonWidth / 2, startY).size(buttonWidth, buttonHeight).build());
+        Button showInGameButton = Button.builder(
+                Component.translatable("button.pinmod.show_in_game").append(PinModConfig.SHOW_IN_GAME.get() ? "ON" : "OFF"),
+                button -> {
+                    MainConfigHandler.toggleShowInGame(button);
+                    button.setMessage(Component.translatable("button.pinmod.show_in_game").append(PinModConfig.SHOW_IN_GAME.get() ? "ON" : "OFF"));
+                }
+        ).pos(this.width / 2 - buttonWidth / 2, startY).size(buttonWidth, buttonHeight).build();
+        addRenderableWidget(showInGameButton);
 
         startY += buttonHeight + buttonMargin;
 
@@ -80,11 +85,12 @@ public class MainConfigScreen extends Screen {
 
     @Override
     public void onClose() {
+        assert this.minecraft != null;
         this.minecraft.setScreen(parent);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         this.renderBackground(guiGraphics);
         guiGraphics.drawCenteredString(this.font, this.title.getString(), this.width / 2, 15, 0xFFFFFF);
         super.render(guiGraphics, mouseX, mouseY, delta);

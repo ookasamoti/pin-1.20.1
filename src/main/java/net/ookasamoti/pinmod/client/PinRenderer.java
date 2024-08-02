@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.ookasamoti.pinmod.Pin;
 import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.PinMod;
+import net.ookasamoti.pinmod.config.PinModConfig;
 
 import java.util.Queue;
 import java.util.UUID;
@@ -25,6 +26,10 @@ public class PinRenderer {
     @SubscribeEvent
     public static void onRenderWorldLast(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            return;
+        }
+
+        if (!PinModConfig.SHOW_IN_GAME.get()) {
             return;
         }
 
