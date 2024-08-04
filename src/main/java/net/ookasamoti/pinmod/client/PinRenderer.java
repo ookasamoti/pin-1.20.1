@@ -48,37 +48,22 @@ public class PinRenderer {
                 if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
                     selectedPin = pin;
                 }
-                renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, distanceToCursor);
+                renderPin(pin, matrixStack, mc.player.getDisplayName().getString(), distanceToCursor);
             }
         }
     }
 
-    private static void renderPin(Pin pin, PoseStack matrixStack, float partialTicks, String playerName, UUID playerUUID, double distanceToCursor) {
+    private static void renderPin(Pin pin, PoseStack matrixStack, String playerName,  double distanceToCursor) {
         Minecraft mc = Minecraft.getInstance();
         EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
         Font font = mc.font;
         MultiBufferSource.BufferSource buffer = mc.renderBuffers().bufferSource();
         Vec3 cameraPos = dispatcher.camera.getPosition();
 
-        double pinX = pin.getX();
-        double pinY = pin.getY();
-        double pinZ = pin.getZ();
-        double distance = cameraPos.distanceTo(new Vec3(pinX, pinY, pinZ));
-
-        // カメラの向きに応じてピンの位置を調整
-        assert mc.player != null;
-        Vec3 viewVector = mc.player.getViewVector(partialTicks);
-        if (distance > PinModConstants.MAX_RENDER_DISTANCE) {
-            double ratio = PinModConstants.MAX_RENDER_DISTANCE / distance;
-            pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
-//            pinY = cameraPos.y + (pinY - cameraPos.y) * ratio + ((distance - 16) / (distance * 1.6 - 0.85));
-            pinY = cameraPos.y + (pinY - cameraPos.y) * ratio;
-            pinZ = cameraPos.z + (pinZ - cameraPos.z) * ratio;
-        }
-
-        double x = pinX - cameraPos.x - 0.5 * viewVector.y * Math.cos(Math.atan2(viewVector.z, viewVector.x));
-        double y = pinY - cameraPos.y;
-        double z = pinZ - cameraPos.z - 0.5 * viewVector.y * Math.sin(Math.atan2(viewVector.z, viewVector.x));
+        Vec3 simulatedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos,  PinModConstants.MAX_RENDER_DISTANCE, PinModConstants.MAX_RENDER_DISTANCE);
+        double x = simulatedPinPos.x - cameraPos.x;
+        double y = simulatedPinPos.y - cameraPos.y;
+        double z = simulatedPinPos.z - cameraPos.z;
 
         matrixStack.pushPose();
         matrixStack.translate(x, y, z);
@@ -109,7 +94,7 @@ public class PinRenderer {
             font.drawInBatch(coordinates, (float) -font.width(coordinates) / 2, 1 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
 
             // Draw distance below the coordinates
-            String distanceText = String.format("Distance: %.1f", distance);
+            String distanceText = String.format("Distance: %.1f", cameraPos.distanceTo(new Vec3(pin.getX(), pin.getY(), pin.getZ())));
             font.drawInBatch(distanceText, (float) -font.width(distanceText) / 2, 2 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
         }
 
@@ -122,8 +107,9 @@ public class PinRenderer {
     }
 
     private static double getDistanceToCursor(Pin pin, Vec3 cameraPos, Vec3 viewVector) {
-        Vec3 pinPos = new Vec3(pin.getX(), pin.getY(), pin.getZ());
-        Vec3 diff = pinPos.subtract(cameraPos);
+        Vec3 adjustedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_RENDER_DISTANCE, 0);
+        Vec3 diff = adjustedPinPos.subtract(cameraPos);
         return diff.cross(viewVector).length();
     }
+
 }

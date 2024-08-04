@@ -38,21 +38,13 @@ public class PinManagerHandler {
                 double x = pinPos.getX() + 0.5;
                 double y = pinPos.getY() + 0.5;
                 double z = pinPos.getZ() + 0.5;
+                Pin pin = new Pin(x, y, z);
 
-                PinManager.addPin(mc.player.getUUID(), new Pin(x, y, z));
+                PinManager.addPin(mc.player.getUUID(), pin);
 
                 // Calculate sound position
-                Vec3 soundPos = new Vec3(x, y, z);
-                Vec3 playerPos = mc.player.position();
-                double distance = playerPos.distanceTo(soundPos);
-                if (distance > PinModConstants.MAX_SOUND_DISTANCE) {
-                    double ratio = PinModConstants.MAX_SOUND_DISTANCE / distance;
-                    soundPos = new Vec3(
-                            playerPos.x + (x - playerPos.x) * ratio,
-                            playerPos.y + (y - playerPos.y) * ratio,
-                            playerPos.z + (z - playerPos.z) * ratio
-                    );
-                }
+                Vec3 cameraPos = mc.player.getEyePosition(1.0F);
+                Vec3 soundPos = getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_SOUND_DISTANCE, PinModConstants.MAX_SOUND_DISTANCE);
 
                 // ピンが追加された場所またはプレイヤーから16ブロック離れた地点で経験値取得音を再生
                 mc.player.getCommandSenderWorld().playSound(mc.player, new BlockPos((int) soundPos.x, (int) soundPos.y, (int) soundPos.z), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.0F);
@@ -73,5 +65,21 @@ public class PinManagerHandler {
         Vec3 lookVector = player.getViewVector(1.0F);
         Vec3 traceEnd = eyePosition.add(lookVector.x * 512.0, lookVector.y * 512.0, lookVector.z * 512.0);
         return player.getCommandSenderWorld().clip(new ClipContext(eyePosition, traceEnd, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+    }
+
+    public static Vec3 getSimulatedPinPosition(Pin pin, Vec3 cameraPos, double maxRenderDistance, double thresholdDistance) {
+        double pinX = pin.getX();
+        double pinY = pin.getY();
+        double pinZ = pin.getZ();
+        double distance = cameraPos.distanceTo(new Vec3(pinX, pinY, pinZ));
+
+        if (distance > thresholdDistance) {
+            double ratio = maxRenderDistance / distance;
+            pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
+            pinY = cameraPos.y + (pinY - cameraPos.y) * ratio;
+            pinZ = cameraPos.z + (pinZ - cameraPos.z) * ratio;
+        }
+
+        return new Vec3(pinX, pinY, pinZ);
     }
 }
