@@ -45,17 +45,15 @@ public class PinRenderer {
             selectedPin = null;
             for (Pin pin : pins) {
                 double distanceToCursor = getDistanceToCursor(pin, cameraPos, viewVector);
-                if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD) {
+                if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
                     selectedPin = pin;
-                    renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, true);
-                } else {
-                    renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, false);
                 }
+                renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, distanceToCursor);
             }
         }
     }
 
-    private static void renderPin(Pin pin, PoseStack matrixStack, float partialTicks, String playerName, UUID playerUUID, boolean isHighlighted) {
+    private static void renderPin(Pin pin, PoseStack matrixStack, float partialTicks, String playerName, UUID playerUUID, double distanceToCursor) {
         Minecraft mc = Minecraft.getInstance();
         EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
         Font font = mc.font;
@@ -73,6 +71,7 @@ public class PinRenderer {
         if (distance > PinModConstants.MAX_RENDER_DISTANCE) {
             double ratio = PinModConstants.MAX_RENDER_DISTANCE / distance;
             pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
+//            pinY = cameraPos.y + (pinY - cameraPos.y) * ratio + ((distance - 16) / (distance * 1.6 - 0.85));
             pinY = cameraPos.y + (pinY - cameraPos.y) * ratio;
             pinZ = cameraPos.z + (pinZ - cameraPos.z) * ratio;
         }
@@ -86,6 +85,10 @@ public class PinRenderer {
         matrixStack.mulPose(dispatcher.cameraOrientation());
 
         float scale = 0.1F;
+        if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
+            scale *= 1.5F;
+        }
+
         matrixStack.scale(-scale, -scale, scale);
 
         RenderSystem.enableBlend();
@@ -95,25 +98,20 @@ public class PinRenderer {
         PoseStack.Pose pose = matrixStack.last();
         int color = 0x80FFFFFF;
 
-        if (isHighlighted) {
-            font.drawInBatch("⬦", (float) -font.width("⬦") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
-        } else {
-            font.drawInBatch("◈", (float) -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+        font.drawInBatch("◈", (float) -font.width("◈") / 2, -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+        if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_INFO) {
+            // Draw player name above the pin
+            font.drawInBatch(playerName, (float) -font.width(playerName) / 2, -1 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+            // Draw pin coordinates below the pin
+            String coordinates = String.format("X: %.1f Y: %.1f Z: %.1f", pin.getX(), pin.getY(), pin.getZ());
+            font.drawInBatch(coordinates, (float) -font.width(coordinates) / 2, 1 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+            // Draw distance below the coordinates
+            String distanceText = String.format("Distance: %.1f", distance);
+            font.drawInBatch(distanceText, (float) -font.width(distanceText) / 2, 2 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
         }
-
-        float test = 0.8F;
-        matrixStack.scale((float) (scale * test), (float) (scale * test), (float) (scale * test));
-
-        // Draw player name above the pin
-        font.drawInBatch(playerName, (float) -font.width(playerName) / 2, -10 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
-
-        // Draw pin coordinates below the pin
-        String coordinates = String.format("X: %.1f Y: %.1f Z: %.1f", pin.getX(), pin.getY(), pin.getZ());
-        font.drawInBatch(coordinates, (float) -font.width(coordinates) / 2, 10 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
-
-        // Draw distance below the coordinates
-        String distanceText = String.format("Distance: %.1f", distance);
-        font.drawInBatch(distanceText, (float) -font.width(distanceText) / 2, 20 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
 
         buffer.endBatch();
 
@@ -124,7 +122,7 @@ public class PinRenderer {
     }
 
     private static double getDistanceToCursor(Pin pin, Vec3 cameraPos, Vec3 viewVector) {
-        Vec3 pinPos = PinManagerHandler.calculatePositionForSound(new Vec3(pin.getX(), pin.getY(), pin.getZ()), cameraPos, PinModConstants.MAX_RENDER_DISTANCE);
+        Vec3 pinPos = new Vec3(pin.getX(), pin.getY(), pin.getZ());
         Vec3 diff = pinPos.subtract(cameraPos);
         return diff.cross(viewVector).length();
     }
