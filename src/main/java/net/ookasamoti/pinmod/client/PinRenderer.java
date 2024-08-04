@@ -15,13 +15,14 @@ import net.ookasamoti.pinmod.Pin;
 import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.PinMod;
 import net.ookasamoti.pinmod.config.PinModConfig;
+import net.ookasamoti.pinmod.util.PinModConstants;
 
 import java.util.Queue;
 import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class PinRenderer {
-    private static final double MAX_RENDER_DISTANCE = 16.0;
+    static Pin selectedPin = null;
 
     @SubscribeEvent
     public static void onRenderWorldLast(RenderLevelStageEvent event) {
@@ -38,13 +39,23 @@ public class PinRenderer {
             UUID playerUUID = mc.player.getUUID();
             Queue<Pin> pins = PinManager.getPins(playerUUID);
             PoseStack matrixStack = event.getPoseStack();
+            Vec3 cameraPos = mc.player.getEyePosition(event.getPartialTick());
+            Vec3 viewVector = mc.player.getViewVector(event.getPartialTick());
+
+            selectedPin = null;
             for (Pin pin : pins) {
-                renderPin(pin, matrixStack, event.getPartialTick());
+                double distanceToCursor = getDistanceToCursor(pin, cameraPos, viewVector);
+                if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD) {
+                    selectedPin = pin;
+                    renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, true);
+                } else {
+                    renderPin(pin, matrixStack, event.getPartialTick(), mc.player.getDisplayName().getString(), playerUUID, false);
+                }
             }
         }
     }
 
-    private static void renderPin(Pin pin, PoseStack matrixStack, float partialTicks) {
+    private static void renderPin(Pin pin, PoseStack matrixStack, float partialTicks, String playerName, UUID playerUUID, boolean isHighlighted) {
         Minecraft mc = Minecraft.getInstance();
         EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
         Font font = mc.font;
@@ -56,16 +67,19 @@ public class PinRenderer {
         double pinZ = pin.getZ();
         double distance = cameraPos.distanceTo(new Vec3(pinX, pinY, pinZ));
 
-        if (distance > MAX_RENDER_DISTANCE) {
-            double ratio = MAX_RENDER_DISTANCE / distance;
+        // カメラの向きに応じてピンの位置を調整
+        assert mc.player != null;
+        Vec3 viewVector = mc.player.getViewVector(partialTicks);
+        if (distance > PinModConstants.MAX_RENDER_DISTANCE) {
+            double ratio = PinModConstants.MAX_RENDER_DISTANCE / distance;
             pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
             pinY = cameraPos.y + (pinY - cameraPos.y) * ratio;
             pinZ = cameraPos.z + (pinZ - cameraPos.z) * ratio;
         }
 
-        double x = pinX - cameraPos.x;
+        double x = pinX - cameraPos.x - 0.5 * viewVector.y * Math.cos(Math.atan2(viewVector.z, viewVector.x));
         double y = pinY - cameraPos.y;
-        double z = pinZ - cameraPos.z;
+        double z = pinZ - cameraPos.z - 0.5 * viewVector.y * Math.sin(Math.atan2(viewVector.z, viewVector.x));
 
         matrixStack.pushPose();
         matrixStack.translate(x, y, z);
@@ -80,12 +94,38 @@ public class PinRenderer {
 
         PoseStack.Pose pose = matrixStack.last();
         int color = 0x80FFFFFF;
-        font.drawInBatch("◈", (float) -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+        if (isHighlighted) {
+            font.drawInBatch("⬦", (float) -font.width("⬦") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+        } else {
+            font.drawInBatch("◈", (float) -font.width("◈") / 2, 0, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+        }
+
+        float test = 0.8F;
+        matrixStack.scale((float) (scale * test), (float) (scale * test), (float) (scale * test));
+
+        // Draw player name above the pin
+        font.drawInBatch(playerName, (float) -font.width(playerName) / 2, -10 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+        // Draw pin coordinates below the pin
+        String coordinates = String.format("X: %.1f Y: %.1f Z: %.1f", pin.getX(), pin.getY(), pin.getZ());
+        font.drawInBatch(coordinates, (float) -font.width(coordinates) / 2, 10 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
+        // Draw distance below the coordinates
+        String distanceText = String.format("Distance: %.1f", distance);
+        font.drawInBatch(distanceText, (float) -font.width(distanceText) / 2, 20 / test, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+
         buffer.endBatch();
 
         RenderSystem.enableDepthTest();
         RenderSystem.disableBlend();
 
         matrixStack.popPose();
+    }
+
+    private static double getDistanceToCursor(Pin pin, Vec3 cameraPos, Vec3 viewVector) {
+        Vec3 pinPos = PinManagerHandler.calculatePositionForSound(new Vec3(pin.getX(), pin.getY(), pin.getZ()), cameraPos, PinModConstants.MAX_RENDER_DISTANCE);
+        Vec3 diff = pinPos.subtract(cameraPos);
+        return diff.cross(viewVector).length();
     }
 }

@@ -1,6 +1,7 @@
 {
   "key.categories.pinmod": "Pin Mod",
   "key.pinmod.add_pin": "Add Pin",
+  "key.pinmod.secondly_pin": "Secondly Pin",
   "key.pinmod.open_config": "Open Config",
   "key.pinmod.manage_pin": "Manage Pin",
   "key.pinmod.toggle_visibility": "Toggle Pin Visibility",

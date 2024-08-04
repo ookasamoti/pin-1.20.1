@@ -3,6 +3,7 @@ package net.ookasamoti.pinmod.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -14,6 +15,13 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class KeyInputHandler {
+    public static final KeyMapping secondlyPinKey = new KeyMapping(
+            "key.pinmod.secondly_pin",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_L,
+            "key.categories.pinmod"
+    );
+
     public static final KeyMapping addPinKey = new KeyMapping(
             "key.pinmod.add_pin",
             InputConstants.Type.KEYSYM,
@@ -31,11 +39,13 @@ public class KeyInputHandler {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(addPinKey);
+        event.register(secondlyPinKey);
         event.register(openConfigKey);
     }
 
     public static void register(final FMLClientSetupEvent event) {
         Minecraft.getInstance().options.keyMappings = addKeyMapping(Minecraft.getInstance().options.keyMappings, addPinKey);
+        Minecraft.getInstance().options.keyMappings = addKeyMapping(Minecraft.getInstance().options.keyMappings, secondlyPinKey);
         Minecraft.getInstance().options.keyMappings = addKeyMapping(Minecraft.getInstance().options.keyMappings, openConfigKey);
     }
 
@@ -50,10 +60,28 @@ public class KeyInputHandler {
     public static void onKeyInput(InputEvent.Key event) {
         Minecraft mc = Minecraft.getInstance();
         if (addPinKey.isDown()) {
-                PinManagerHandler.addPin();
+            PinManagerHandler.addPin();
         }
         if (openConfigKey.isDown()) {
             mc.setScreen(new MainConfigScreen(mc.screen));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onMouseInput(InputEvent.MouseButton.Pre event) {
+        Minecraft mc = Minecraft.getInstance();
+        long windowHandle = mc.getWindow().getWindow();
+
+        boolean isCtrlPressed = InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_RIGHT_CONTROL);
+
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && event.getAction() == GLFW.GLFW_PRESS) {
+            if (isCtrlPressed) {
+                PinManagerHandler.addPin();
+                event.setCanceled(true);
+            } else if (mc.hitResult != null && mc.hitResult.getType() != HitResult.Type.BLOCK) {
+                PinManagerHandler.addPin();
+                event.setCanceled(true);
+            }
         }
     }
 }

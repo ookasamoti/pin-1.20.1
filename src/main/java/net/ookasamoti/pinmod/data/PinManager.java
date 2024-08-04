@@ -18,4 +18,11 @@ public class PinManager {
     public static Queue<Pin> getPins(UUID playerUUID) {
         return playerPins.getOrDefault(playerUUID, new LinkedList<>());
     }
+
+    public static void removePin(UUID playerUUID, Pin pin) {
+        Queue<Pin> pins = playerPins.get(playerUUID);
+        if (pins != null) {
+            pins.remove(pin);
+        }
+    }
 }

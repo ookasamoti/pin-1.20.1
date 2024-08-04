@@ -1,6 +1,7 @@
 {
   "key.categories.pinmod": "ピンmod",
   "key.pinmod.add_pin": "ピンを追加",
+  "key.pinmod.secondly_pin": "ピンの別設定",
   "key.pinmod.open_config": "設定を開く",
   "key.pinmod.manage_pin": "ピン管理",
   "key.pinmod.toggle_visibility": "ピンの表示/非表示を切り替え",
