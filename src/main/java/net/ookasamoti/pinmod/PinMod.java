@@ -24,7 +24,7 @@ public class PinMod {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
 
-        PinModConfig.register();  // コンフィグの登録をここで行います
+        PinModConfig.register();
 
         MinecraftForge.EVENT_BUS.register(this);
     }

@@ -12,7 +12,9 @@ public class PinManager {
     private static final Map<UUID, Queue<Pin>> playerPins = new HashMap<>();
 
     public static void addPin(UUID playerUUID, Pin pin) {
-        playerPins.computeIfAbsent(playerUUID, k -> new LinkedList<>()).add(pin);
+        Queue<Pin> pins = playerPins.computeIfAbsent(playerUUID, k -> new LinkedList<>());
+        pins.removeIf(existingPin -> existingPin.getX() == pin.getX() && existingPin.getY() == pin.getY() && existingPin.getZ() == pin.getZ());
+        pins.add(pin);
     }
 
     public static Queue<Pin> getPins(UUID playerUUID) {
@@ -24,5 +26,13 @@ public class PinManager {
         if (pins != null) {
             pins.remove(pin);
         }
+    }
+
+    public static boolean pinExists(UUID playerUUID, Pin pin) {
+        Queue<Pin> pins = playerPins.get(playerUUID);
+        if (pins != null) {
+            return pins.stream().anyMatch(existingPin -> existingPin.getX() == pin.getX() && existingPin.getY() == pin.getY() && existingPin.getZ() == pin.getZ());
+        }
+        return false;
     }
 }

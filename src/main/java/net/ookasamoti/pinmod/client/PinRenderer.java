@@ -60,7 +60,7 @@ public class PinRenderer {
         MultiBufferSource.BufferSource buffer = mc.renderBuffers().bufferSource();
         Vec3 cameraPos = dispatcher.camera.getPosition();
 
-        Vec3 simulatedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos,  PinModConstants.MAX_RENDER_DISTANCE, PinModConstants.MAX_RENDER_DISTANCE);
+        Vec3 simulatedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos,  PinModConstants.MAX_RENDER_DISTANCE, false);
         double x = simulatedPinPos.x - cameraPos.x;
         double y = simulatedPinPos.y - cameraPos.y;
         double z = simulatedPinPos.z - cameraPos.z;
@@ -83,7 +83,7 @@ public class PinRenderer {
         PoseStack.Pose pose = matrixStack.last();
         int color = 0x80FFFFFF;
 
-        font.drawInBatch("◈", (float) -font.width("◈") / 2, -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
+        font.drawInBatch("◈", (float) -font.width("◈") / 2, -4, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
 
         if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_INFO) {
             // Draw player name above the pin
@@ -107,7 +107,7 @@ public class PinRenderer {
     }
 
     private static double getDistanceToCursor(Pin pin, Vec3 cameraPos, Vec3 viewVector) {
-        Vec3 adjustedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_RENDER_DISTANCE, 0);
+        Vec3 adjustedPinPos = PinManagerHandler.getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_RENDER_DISTANCE, true);
         Vec3 diff = adjustedPinPos.subtract(cameraPos);
         return diff.cross(viewVector).length();
     }
