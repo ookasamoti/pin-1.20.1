@@ -11,6 +11,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.ookasamoti.pinmod.PinMod;
+import net.ookasamoti.pinmod.util.PinModConstants;
 import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
@@ -59,8 +60,9 @@ public class KeyInputHandler {
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
         Minecraft mc = Minecraft.getInstance();
+        long currentTime = System.currentTimeMillis();
         if (addPinKey.isDown()) {
-            PinManagerHandler.addPin();
+            PinManagerHandler.handlePinCreation(currentTime);
         }
         if (openConfigKey.isDown()) {
             mc.setScreen(new MainConfigScreen(mc.screen));
@@ -71,15 +73,12 @@ public class KeyInputHandler {
     public static void onMouseInput(InputEvent.MouseButton.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         long windowHandle = mc.getWindow().getWindow();
+        long currentTime = System.currentTimeMillis();
 
-        boolean isCtrlPressed = InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_LEFT_CONTROL) || InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_RIGHT_CONTROL);
-
+        boolean isCtrlPressed = InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_LEFT_CONTROL);
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && event.getAction() == GLFW.GLFW_PRESS) {
-            if (isCtrlPressed) {
-                PinManagerHandler.addPin();
-                event.setCanceled(true);
-            } else if (mc.hitResult != null && mc.hitResult.getType() != HitResult.Type.BLOCK) {
-                PinManagerHandler.addPin();
+            if (isCtrlPressed || (mc.hitResult != null && mc.hitResult.getType() != HitResult.Type.BLOCK)) {
+                PinManagerHandler.handlePinCreation(currentTime);
                 event.setCanceled(true);
             }
         }

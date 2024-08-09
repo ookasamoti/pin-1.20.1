@@ -5,4 +5,6 @@ public class PinModConstants {
     public static final double MAX_SOUND_DISTANCE = 8.0;
     public static final double CURSOR_DISTANCE_THRESHOLD_INFO = 8.0;
     public static final double CURSOR_DISTANCE_THRESHOLD_MANAGE = 0.8;
+    public static final long TEMPORARY_PIN_DURATION = 10000L;
+    public static final long DOUBLE_CLICK_INTERVAL = 400L;
 }

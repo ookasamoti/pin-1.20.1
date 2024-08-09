@@ -15,49 +15,64 @@ import net.ookasamoti.pinmod.config.PinModConfig;
 import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.util.PinModConstants;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PinManagerHandler {
-    public static void addPin() {
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static long lastClicked = 0;
+
+    public static void handlePinCreation(long clickedTime) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null) {
-            if (PinRenderer.selectedPin != null) {
-                PinManager.removePin(mc.player.getUUID(), PinRenderer.selectedPin); // 選択されたピンを削除
-                PinRenderer.selectedPin = null;
-                return;
+        if (PinRenderer.selectedPin != null ) {
+            assert mc.player != null;
+            PinManager.removePin(mc.player.getUUID(), PinRenderer.selectedPin);
+            if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
+                createPin(true);
             }
-            HitResult hitResult = getPlayerPOVHitResult(mc.player);
-            boolean currentShowInGame = PinModConfig.SHOW_IN_GAME.get();
+        } else {
+            createPin(clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL);
+        }
 
-            if (hitResult.getType() == HitResult.Type.BLOCK) {
-                BlockHitResult blockHitResult = (BlockHitResult) hitResult;
-                BlockPos blockPos = blockHitResult.getBlockPos();
-                Direction face = blockHitResult.getDirection();
-                BlockPos pinPos = blockPos.relative(face);
+        lastClicked = System.currentTimeMillis();
+    }
 
-                double x = pinPos.getX() + 0.5;
-                double y = pinPos.getY() + 0.5;
-                double z = pinPos.getZ() + 0.5;
-                Pin pin = new Pin(x, y, z);
+    public static void createPin(boolean isTemporary) {
+        Minecraft mc = Minecraft.getInstance();
+        assert mc.player != null;
+        HitResult hitResult = getPlayerPOVHitResult(mc.player);
+        boolean currentShowInGame = PinModConfig.SHOW_IN_GAME.get();
 
-                // 既存のピンがある場合は上書き
-                if (PinManager.pinExists(mc.player.getUUID(), pin)) {
-                    PinManager.removePin(mc.player.getUUID(), pin);
-                }
-                PinManager.addPin(mc.player.getUUID(), pin);
+        if (hitResult.getType() == HitResult.Type.BLOCK) {
+            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
+            BlockPos blockPos = blockHitResult.getBlockPos();
+            Direction face = blockHitResult.getDirection();
+            BlockPos pinPos = blockPos.relative(face);
 
-                Vec3 cameraPos = mc.player.getEyePosition(1.0F);
-                Vec3 soundPos = getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_SOUND_DISTANCE, false);
+            double x = pinPos.getX() + 0.5;
+            double y = pinPos.getY() + 0.5;
+            double z = pinPos.getZ() + 0.5;
+            Pin pin = new Pin(x, y, z, isTemporary, mc.player.getUUID());
 
-                mc.player.getCommandSenderWorld().playSound(mc.player, new BlockPos((int) soundPos.x, (int) soundPos.y, (int) soundPos.z), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.0F);
+            PinManager.addPin(mc.player.getUUID(), pin);
 
-                if(!currentShowInGame){
-                    PinModConfig.SHOW_IN_GAME.set(true);
-                    PinModConfig.CLIENT_SPEC.save();
-                }
-            } else if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.MISS) {
-                PinModConfig.SHOW_IN_GAME.set(!currentShowInGame);
+            Vec3 cameraPos = mc.player.getEyePosition(1.0F);
+            Vec3 soundPos = getSimulatedPinPosition(pin, cameraPos, PinModConstants.MAX_SOUND_DISTANCE, false);
+
+            mc.player.getCommandSenderWorld().playSound(mc.player, new BlockPos((int) soundPos.x, (int) soundPos.y, (int) soundPos.z), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.0F);
+
+            if (isTemporary) {
+                scheduler.schedule(() -> PinManager.removePin(mc.player.getUUID(), pin), PinModConstants.TEMPORARY_PIN_DURATION, TimeUnit.MILLISECONDS);
+            }
+
+            if (!currentShowInGame) {
+                PinModConfig.SHOW_IN_GAME.set(true);
                 PinModConfig.CLIENT_SPEC.save();
             }
+        } else if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.MISS) {
+            PinModConfig.SHOW_IN_GAME.set(!currentShowInGame);
+            PinModConfig.CLIENT_SPEC.save();
         }
     }
 
@@ -68,14 +83,14 @@ public class PinManagerHandler {
         return player.getCommandSenderWorld().clip(new ClipContext(eyePosition, traceEnd, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
     }
 
-    public static Vec3 getSimulatedPinPosition(Pin pin, Vec3 cameraPos, double thresholdDistance, boolean simulateFlg) {
+    public static Vec3 getSimulatedPinPosition(Pin pin, Vec3 cameraPos, double maxRenderDistance, boolean simulateFlg) {
         double pinX = pin.getX();
         double pinY = pin.getY();
         double pinZ = pin.getZ();
         double distance = cameraPos.distanceTo(new Vec3(pinX, pinY, pinZ));
 
-        if (distance > thresholdDistance) {
-            double ratio = thresholdDistance / distance;
+        if (distance > maxRenderDistance || simulateFlg) {
+            double ratio = maxRenderDistance / distance;
             pinX = cameraPos.x + (pinX - cameraPos.x) * ratio;
             pinY = cameraPos.y + (pinY - cameraPos.y) * ratio;
             pinZ = cameraPos.z + (pinZ - cameraPos.z) * ratio;

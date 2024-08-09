@@ -48,12 +48,12 @@ public class PinRenderer {
                 if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
                     selectedPin = pin;
                 }
-                renderPin(pin, matrixStack, mc.player.getDisplayName().getString(), distanceToCursor);
+                renderPin(pin, matrixStack, distanceToCursor);
             }
         }
     }
 
-    private static void renderPin(Pin pin, PoseStack matrixStack, String playerName,  double distanceToCursor) {
+    private static void renderPin(Pin pin, PoseStack matrixStack, double distanceToCursor) {
         Minecraft mc = Minecraft.getInstance();
         EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
         Font font = mc.font;
@@ -87,6 +87,8 @@ public class PinRenderer {
 
         if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_INFO) {
             // Draw player name above the pin
+            assert mc.player != null;
+            String playerName = mc.player.getName().getString();
             font.drawInBatch(playerName, (float) -font.width(playerName) / 2, -1 / scale -5, color, false, pose.pose(), buffer, Font.DisplayMode.SEE_THROUGH, 0, 15728880);
 
             // Draw pin coordinates below the pin
@@ -111,5 +113,5 @@ public class PinRenderer {
         Vec3 diff = adjustedPinPos.subtract(cameraPos);
         return diff.cross(viewVector).length();
     }
-
 }
+
