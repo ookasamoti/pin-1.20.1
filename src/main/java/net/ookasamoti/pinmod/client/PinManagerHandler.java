@@ -21,22 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 public class PinManagerHandler {
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private static long lastClicked = 0;
-
-    public static void handlePinCreation(long clickedTime) {
-        Minecraft mc = Minecraft.getInstance();
-        if (PinRenderer.selectedPin != null ) {
-            assert mc.player != null;
-            PinManager.removePin(mc.player.getUUID(), PinRenderer.selectedPin);
-            if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
-                createPin(true);
-            }
-        } else {
-            createPin(clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL);
-        }
-
-        lastClicked = System.currentTimeMillis();
-    }
 
     public static void createPin(boolean isTemporary) {
         Minecraft mc = Minecraft.getInstance();

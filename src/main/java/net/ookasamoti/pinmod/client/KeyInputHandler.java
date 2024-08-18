@@ -11,22 +11,23 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.ookasamoti.pinmod.PinMod;
+import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.util.PinModConstants;
 import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class KeyInputHandler {
-    public static final KeyMapping secondlyPinKey = new KeyMapping(
-            "key.pinmod.secondly_pin",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_L,
-            "key.categories.pinmod"
-    );
-
     public static final KeyMapping addPinKey = new KeyMapping(
             "key.pinmod.add_pin",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_P,
+            "key.categories.pinmod"
+    );
+
+    public static final KeyMapping secondlyPinKey = new KeyMapping(
+            "key.pinmod.secondly_pin",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_L,
             "key.categories.pinmod"
     );
 
@@ -36,6 +37,8 @@ public class KeyInputHandler {
             GLFW.GLFW_KEY_O,
             "key.categories.pinmod"
     );
+
+    private static long lastClicked = 0;
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
@@ -62,7 +65,7 @@ public class KeyInputHandler {
         Minecraft mc = Minecraft.getInstance();
         long currentTime = System.currentTimeMillis();
         if (addPinKey.isDown()) {
-            PinManagerHandler.handlePinCreation(currentTime);
+            handlePinCreation(currentTime);
         }
         if (openConfigKey.isDown()) {
             mc.setScreen(new MainConfigScreen(mc.screen));
@@ -78,9 +81,24 @@ public class KeyInputHandler {
         boolean isCtrlPressed = InputConstants.isKeyDown(windowHandle, GLFW.GLFW_KEY_LEFT_CONTROL);
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && event.getAction() == GLFW.GLFW_PRESS) {
             if (isCtrlPressed || (mc.hitResult != null && mc.hitResult.getType() != HitResult.Type.BLOCK)) {
-                PinManagerHandler.handlePinCreation(currentTime);
+                handlePinCreation(currentTime);
                 event.setCanceled(true);
             }
         }
+    }
+
+    public static void handlePinCreation(long clickedTime) {
+        Minecraft mc = Minecraft.getInstance();
+        if (PinRenderer.selectedPin != null ) {
+            assert mc.player != null;
+            PinManager.removePin(mc.player.getUUID(), PinRenderer.selectedPin);
+            if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
+                PinManagerHandler.createPin(true);
+            }
+        } else {
+            PinManagerHandler.createPin(clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL);
+        }
+
+        lastClicked = System.currentTimeMillis();
     }
 }
