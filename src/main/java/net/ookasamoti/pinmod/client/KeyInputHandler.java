@@ -3,6 +3,11 @@ package net.ookasamoti.pinmod.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
@@ -11,6 +16,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.ookasamoti.pinmod.PinMod;
+import net.ookasamoti.pinmod.config.PinModConfig;
 import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.util.PinModConstants;
 import org.lwjgl.glfw.GLFW;
@@ -64,9 +70,19 @@ public class KeyInputHandler {
     public static void onKeyInput(InputEvent.Key event) {
         Minecraft mc = Minecraft.getInstance();
         long currentTime = System.currentTimeMillis();
+
+        if (event.getKey() == secondlyPinKey.getKey().getValue()) {
+            if (event.getAction() == GLFW.GLFW_PRESS) {
+                RadialMenuHandler.activateRadialMenu();
+            } else if (event.getAction() == GLFW.GLFW_RELEASE) {
+                RadialMenuHandler.deactivateRadialMenu();
+            }
+        }
+
         if (addPinKey.isDown()) {
             handlePinCreation(currentTime);
         }
+
         if (openConfigKey.isDown()) {
             mc.setScreen(new MainConfigScreen(mc.screen));
         }
@@ -87,16 +103,37 @@ public class KeyInputHandler {
         }
     }
 
-    public static void handlePinCreation(long clickedTime) {
+    private static void handlePinCreation(long clickedTime) {
         Minecraft mc = Minecraft.getInstance();
-        if (PinRenderer.selectedPin != null ) {
-            assert mc.player != null;
+        assert mc.player != null;
+        HitResult hitResult = PinManagerHandler.getPlayerPOVHitResult(mc.player);
+        boolean currentShowInGame = PinModConfig.SHOW_IN_GAME.get();
+        if (PinRenderer.selectedPin != null) {
             PinManager.removePin(mc.player.getUUID(), PinRenderer.selectedPin);
-            if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
-                PinManagerHandler.createPin(true);
+        }
+
+        if (hitResult.getType() == HitResult.Type.BLOCK) {
+            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
+            BlockPos blockPos = blockHitResult.getBlockPos();
+            Direction face = blockHitResult.getDirection();
+            BlockPos pinPos = blockPos.relative(face);
+            if (PinRenderer.selectedPin != null) {
+                if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
+                    PinManagerHandler.createPin(pinPos, true);
+                }
+            } else {
+                if (clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL) {
+                    PinManager.removeLastTemporaryPin(mc.player.getUUID());
+                }
+                PinManagerHandler.createPin(pinPos, clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL);
             }
-        } else {
-            PinManagerHandler.createPin(clickedTime - lastClicked < PinModConstants.DOUBLE_CLICK_INTERVAL);
+        } else if (hitResult.getType() == HitResult.Type.ENTITY) {
+            EntityHitResult entityHitResult = (EntityHitResult) hitResult;
+            Entity entity = entityHitResult.getEntity();
+            PinManagerHandler.createEntityPin(entity, mc.player.getUUID());
+        } else if (hitResult.getType() == HitResult.Type.MISS && PinRenderer.selectedPin == null) {
+            PinModConfig.SHOW_IN_GAME.set(!currentShowInGame);
+            PinModConfig.CLIENT_SPEC.save();
         }
 
         lastClicked = System.currentTimeMillis();

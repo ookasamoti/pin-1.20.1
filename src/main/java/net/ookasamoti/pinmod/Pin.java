@@ -3,9 +3,9 @@ package net.ookasamoti.pinmod;
 import java.util.UUID;
 
 public class Pin {
-    private final double x;
-    private final double y;
-    private final double z;
+    double x;
+    double y;
+    double z;
     private final long creationTime;
     private final boolean isTemporary;
     private final UUID playerUUID;
