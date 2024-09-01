@@ -27,11 +27,22 @@ public class MainConfigScreen extends Screen {
         Button showInGameButton = Button.builder(
                 Component.translatable("button.pinmod.show_in_game").append(PinModConfig.SHOW_IN_GAME.get() ? "ON" : "OFF"),
                 button -> {
-                    MainConfigHandler.toggleShowInGame(button);
+                    MainConfigHandler.toggleShowInGame();
                     button.setMessage(Component.translatable("button.pinmod.show_in_game").append(PinModConfig.SHOW_IN_GAME.get() ? "ON" : "OFF"));
                 }
         ).pos(this.width / 2 - buttonWidth / 2, startY).size(buttonWidth, buttonHeight).build();
         addRenderableWidget(showInGameButton);
+
+        startY += buttonHeight + buttonMargin;
+
+        Button pickBlockModeButton = Button.builder(
+                Component.translatable("button.pinmod.pick_block_mode").append(PinModConfig.PICK_BLOCK_MODE.get() ? "ON" : "OFF"),
+                button -> {
+                    MainConfigHandler.togglePickBlockMode();
+                    button.setMessage(Component.translatable("button.pinmod.pick_block_mode").append(PinModConfig.PICK_BLOCK_MODE.get() ? "ON" : "OFF"));
+                }
+        ).pos(this.width / 2 - buttonWidth / 2, startY).size(buttonWidth, buttonHeight).build();
+        addRenderableWidget(pickBlockModeButton);
 
         startY += buttonHeight + buttonMargin;
 

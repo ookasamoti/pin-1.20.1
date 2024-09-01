@@ -9,6 +9,7 @@
   "key.pinmod.setting": "pinmod Setting",
   "screen.pinmod.main_config": "pinmod Setting",
   "button.pinmod.show_in_game": "Show In-Game:",
+  "button.pinmod.pick_block_mode": "pick block mode:",
   "button.pinmod.render_settings": "Render Settings",
   "button.pinmod.control_settings": "Control Settings",
   "button.pinmod.advanced_settings": "Advanced Settings",

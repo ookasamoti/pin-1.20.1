@@ -35,11 +35,11 @@ public class PinMod {
 
     private void clientSetup(final FMLClientSetupEvent event) {
         KeyInputHandler.register(event);
-        MinecraftForge.EVENT_BUS.register(new PinRenderer());
+        MinecraftForge.EVENT_BUS.register(PinRenderer.class);
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        LOGGER.info("HELLO from server starting");
+        //on server starting
     }
 }

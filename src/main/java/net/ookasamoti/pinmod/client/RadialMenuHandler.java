@@ -19,14 +19,15 @@ import net.minecraftforge.fml.common.Mod;
 import net.ookasamoti.pinmod.Pin;
 import net.ookasamoti.pinmod.PinMod;
 import net.ookasamoti.pinmod.config.PinModConfig;
-import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.util.PinModConstants;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class RadialMenuHandler {
 
-    private static boolean isMenuActive = false;
+    static boolean isMenuActive = false;
     private static int hoveredSection = -1;
     private static double virtualMouseX;
     private static double virtualMouseY;
@@ -57,19 +58,15 @@ public class RadialMenuHandler {
         virtualMouseY = centerY;
     }
 
-    public static void deactivateRadialMenu() {
+    public static void deactivateRadialMenu(boolean actionFlg) {
         isMenuActive = false;
         Minecraft mc = Minecraft.getInstance();
         mc.mouseHandler.grabMouse();
-
-        executeSectionAction();
-    }
-
-    @SubscribeEvent
-    public static void onMouseInput(InputEvent.MouseButton.Pre event) {
-        if (isMenuActive) {
-            event.setCanceled(true);
+        if (actionFlg) {
+            executeSectionAction();
         }
+        cachedHitResult = null;
+        cashedPin = null;
     }
 
     private static void updateVirtualMousePosition() {
@@ -207,16 +204,15 @@ public class RadialMenuHandler {
 
     private static void executeSectionAction() {
         Minecraft mc = Minecraft.getInstance();
-        boolean currentShowInGame = PinModConfig.SHOW_IN_GAME.get();
         switch (hoveredSection) {
             case 0 -> handlePinCreation(true);
             case 1 -> System.out.println("Waypoint");
             case 2 -> {
                 if (cashedPin == null) {
-                    PinModConfig.SHOW_IN_GAME.set(!currentShowInGame);
+                    PinManagerHandler.toggleShowInGame();
                 } else {
                     assert mc.player != null;
-                    PinManager.removePin(mc.player.getUUID(), cashedPin);
+                    PinManagerHandler.deletePin(cashedPin);
                 }
             }
             case 3 -> handlePinCreation(false);
@@ -227,9 +223,10 @@ public class RadialMenuHandler {
     private static void handlePinCreation(boolean isTemporary) {
         Minecraft mc = Minecraft.getInstance();
         assert mc.player != null;
-        boolean currentShowInGame = PinModConfig.SHOW_IN_GAME.get();
+        UUID playerId = mc.player.getUUID();
         if (cashedPin != null) {
-            PinManager.removePin(mc.player.getUUID(), cashedPin);
+            playerId = cashedPin.getPlayerUUID();
+            PinManagerHandler.deletePin(cashedPin);
         }
 
         if (cachedHitResult.getType() == HitResult.Type.BLOCK) {
@@ -238,15 +235,15 @@ public class RadialMenuHandler {
             Direction face = blockHitResult.getDirection();
             BlockPos pinPos = blockPos.relative(face);
             if (cashedPin != null) {
-                pinPos = new BlockPos((int) cashedPin.getX() - 1, (int) cashedPin.getY(), (int) cashedPin.getZ());
+                pinPos = new BlockPos((int) (cashedPin.getX() - 0.5), (int) (cashedPin.getY() - 0.5), (int) (cashedPin.getZ() - 0.5));
             }
-            PinManagerHandler.createPin(pinPos, isTemporary);
+            PinManagerHandler.createPin(pinPos, isTemporary, playerId);
         } else if (cachedHitResult.getType() == HitResult.Type.ENTITY) {
             EntityHitResult entityHitResult = (EntityHitResult) cachedHitResult;
             Entity entity = entityHitResult.getEntity();
             PinManagerHandler.createEntityPin(entity, mc.player.getUUID());
         } else if (cachedHitResult.getType() == HitResult.Type.MISS) {
-            PinModConfig.SHOW_IN_GAME.set(!currentShowInGame);
+            PinManagerHandler.toggleShowInGame();
             PinModConfig.CLIENT_SPEC.save();
         }
     }

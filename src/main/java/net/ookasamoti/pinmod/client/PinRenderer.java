@@ -6,7 +6,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -18,9 +20,10 @@ import net.ookasamoti.pinmod.data.PinManager;
 import net.ookasamoti.pinmod.PinMod;
 import net.ookasamoti.pinmod.config.PinModConfig;
 import net.ookasamoti.pinmod.util.PinModConstants;
+import org.joml.Vector3f;
 
+import java.util.Objects;
 import java.util.Queue;
-import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = PinMod.MOD_ID, value = Dist.CLIENT)
 public class PinRenderer {
@@ -38,20 +41,26 @@ public class PinRenderer {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
-            UUID playerUUID = mc.player.getUUID();
-            Queue<Pin> pins = PinManager.getPins(playerUUID);
+            Queue<Pin> pins = PinManager.getPins();
             PoseStack matrixStack = event.getPoseStack();
-            Vec3 cameraPos = mc.player.getEyePosition(event.getPartialTick());
-            Vec3 viewVector = mc.player.getViewVector(event.getPartialTick());
+            Vec3 cameraPos = mc.gameRenderer.getMainCamera().getPosition();
+            Vector3f viewVector3f = mc.gameRenderer.getMainCamera().getLookVector();
+            Vec3 viewVector = new Vec3(viewVector3f.x(), viewVector3f.y(), viewVector3f.z());
+            assert mc.level != null;
+            ResourceKey<Level> currentDimension = mc.level.dimension();
 
             selectedPin = null;
             Pin closestPin = null;
             double closestDistance = Double.MAX_VALUE;
 
             for (Pin pin : pins) {
+                if (!pin.getDimension().equals(currentDimension)) {
+                    continue;
+                }
+
                 double distanceToCursor = getDistanceToCursor(pin, cameraPos, viewVector);
 
-                if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
+                if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE && pin.getDimension() == currentDimension) {
                     selectedPin = pin;
                 }
 
@@ -74,26 +83,29 @@ public class PinRenderer {
     }
 
     private static void renderPin(Pin pin, PoseStack matrixStack, double distanceToCursor) {
+        Minecraft mc = Minecraft.getInstance();
         float scale = 0.1F;
         if (distanceToCursor < PinModConstants.CURSOR_DISTANCE_THRESHOLD_MANAGE) {
             scale *= 1.5F;
         }
 
-        int pinColor = pin.isTemporary() ? 0x80AFEEEE : 0x80FFFFFF;
+        int pinColor = 0x80FFFFFF;
+        if (pin.isTemporary()) {
+            assert mc.player != null;
+            pinColor = pin.getPlayerUUID() != mc.player.getUUID() ? 0x80FFF1AB : 0x8000BFFF;
+        }
+
         renderPinBase(pin, matrixStack, "✦", pinColor, -4, scale);
     }
 
     static void renderEntityPin(EntityPin entityPin, PoseStack matrixStack, Vec3 cameraPos) {
-        Minecraft mc = Minecraft.getInstance();
         Entity entity = entityPin.getEntity();
         int distance = (int) cameraPos.distanceTo(new Vec3(entity.getX(), entity.getY(), entity.getZ()));
 
         entityPin.updatePosition(entity);
 
-        assert mc.player != null;
-
         if (entityPin.shouldRemove()) {
-            PinManager.removePin(entityPin.getPlayerUUID(), entityPin);
+            PinManager.removePin(entityPin);
             return;
         }
 
@@ -105,8 +117,7 @@ public class PinRenderer {
         float scale = 0.1F;
         int color = 0x80FFFFFF;
 
-        assert mc.player != null;
-        renderPinBase(pin, matrixStack, mc.player.getName().getString(), color, -15, scale);
+        renderPinBase(pin, matrixStack, Objects.requireNonNull(Objects.requireNonNull(mc.getConnection()).getPlayerInfo(pin.getPlayerUUID())).getProfile().getName(), color, -15, scale);
         renderPinBase(pin, matrixStack, String.format("X: %d Y: %d Z: %d", (int) pin.getX(), (int) pin.getY(), (int) pin.getZ()), color, 8, scale);
         renderPinBase(pin, matrixStack, String.format("Distance: %.1f", cameraPos.distanceTo(new Vec3(pin.getX(), pin.getY(), pin.getZ()))), color, 18, scale);
     }
@@ -119,14 +130,16 @@ public class PinRenderer {
         MultiBufferSource.BufferSource buffer = mc.renderBuffers().bufferSource();
 
         double distance = cameraPos.distanceTo(new Vec3(pin.getX(), pin.getY(), pin.getZ()));
-
         int alpha = 255;
-        if (distance > 64) {
-            alpha = 128;
-            scale *= 0.7f;
-        } else if (distance > 16) {
-            alpha = (int) (255 - (distance / 64.0) * 127);
-            scale *= 1.0f - (float) (distance / 64.0) * 0.3f;
+
+        if (text.length() == 1) {
+            if (distance > 128) {
+                alpha = 128;
+                scale *= 0.7f;
+            } else if (distance > 16) {
+                alpha = (int) (255 - (distance / 128.0) * 127);
+                scale *= 1.0f - (float) (distance / 128.0) * 0.3f;
+            }
         }
 
         color = (color & 0x00FFFFFF) | (alpha << 24);
