@@ -80,18 +80,18 @@ public class PinManagerHandler {
     public static void deletePin(Pin pin) {
         Minecraft mc = Minecraft.getInstance();
         removePin(pin);
-        if (pin.isTemporary()) {
-            assert mc.player != null;
-            if (ServerLifecycleHooks.getCurrentServer() == null && pin.getPlayerUUID().equals(mc.player.getUUID())) {
-                ServerPinManager.getChannel().sendToServer(new PinMessage(pin, true));
-            }
+        assert mc.player != null;
+        if (ServerLifecycleHooks.getCurrentServer() == null && pin.getPlayerUUID().equals(mc.player.getUUID())) {
+            ServerPinManager.getChannel().sendToServer(new PinMessage(pin, true));
         }
     }
 
     public static void removeLastCreatedPin() {
+        Minecraft mc = Minecraft.getInstance();
         if (lastCreatedPin != null) {
             removePin(lastCreatedPin);
-            if (ServerLifecycleHooks.getCurrentServer() == null) {
+            assert mc.player != null;
+            if (ServerLifecycleHooks.getCurrentServer() == null && lastCreatedPin.getPlayerUUID().equals(mc.player.getUUID())) {
                 ServerPinManager.getChannel().sendToServer(new PinMessage(lastCreatedPin, true));
             }
             lastCreatedPin = null;

@@ -19,7 +19,7 @@ public class ClientPinHandler {
                     receivedPin.getX(),
                     receivedPin.getY(),
                     receivedPin.getZ(),
-                    true,
+                    receivedPin.isTemporary(),
                     receivedPin.getPlayerUUID(),
                     receivedPin.getDimension()
             );

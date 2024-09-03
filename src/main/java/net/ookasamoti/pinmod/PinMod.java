@@ -1,6 +1,5 @@
 package net.ookasamoti.pinmod;
 
-import com.mojang.logging.LogUtils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -12,12 +11,10 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.ookasamoti.pinmod.client.KeyInputHandler;
 import net.ookasamoti.pinmod.client.PinRenderer;
 import net.ookasamoti.pinmod.config.PinModConfig;
-import org.slf4j.Logger;
 
 @Mod(PinMod.MOD_ID)
 public class PinMod {
     public static final String MOD_ID = "pinmod";
-    private static final Logger LOGGER = LogUtils.getLogger();
 
     public PinMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -34,7 +31,7 @@ public class PinMod {
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
-        KeyInputHandler.register(event);
+        KeyInputHandler.register();
         MinecraftForge.EVENT_BUS.register(PinRenderer.class);
     }
 

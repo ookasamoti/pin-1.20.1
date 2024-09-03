@@ -7,14 +7,10 @@ import java.util.Queue;
 
 public class PinManager {
     private static final Queue<Pin> pins = new LinkedList<>();
-    private static Pin lastTemporaryPin = null;
 
     public static void addPin(Pin pin) {
         pins.removeIf(existingPin -> existingPin.getX() == pin.getX() && existingPin.getY() == pin.getY() && existingPin.getZ() == pin.getZ());
         pins.add(pin);
-        if (pin.isTemporary()) {
-            lastTemporaryPin = pin;
-        }
     }
 
     public static Queue<Pin> getPins() {
@@ -23,12 +19,5 @@ public class PinManager {
 
     public static void removePin(Pin pin) {
         pins.remove(pin);
-    }
-
-    public static void removeLastTemporaryPin() {
-        if (lastTemporaryPin != null) {
-            removePin(lastTemporaryPin);
-            lastTemporaryPin = null;
-        }
     }
 }

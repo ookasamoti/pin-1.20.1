@@ -31,10 +31,6 @@ public class PinMessage {
         return pin;
     }
 
-    public UUID getPlayerUUID() {
-        return pin.getPlayerUUID();
-    }
-
     public static void encode(PinMessage msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
